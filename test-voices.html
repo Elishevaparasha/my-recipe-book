@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת קולות</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* local tweaks, other colors handled by global CSS */
+        .voice-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: inherit;
+        }
+    </style>
+</head>
+<body class="warm">
+    <script src="js/auth.js"></script>
+    <script>
+
+    // כוח כפייה לצבע חום בלבד
+    document.body.className = 'warm font-medium';
+
+    </script>
+    <h1>🔊 הקולות הזמינים </h1>
+    <button class="btn btn-primary" onclick="loadVoices()">טעון קולות</button>
+    <div id="voicesList"></div>
+
+    <script>
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            const voicesList = document.getElementById('voicesList');
+            
+            if (voices.length === 0) {
+                voicesList.innerHTML = '<p>אין קולות זמינים. נסה שוב...</p>'; 
+                return;
+            }
+            
+            const heVoices = voices.filter(v => v.lang.includes('he') || v.lang.includes('iw'));
+            const enVoices = voices.filter(v => v.lang.includes('en'));
+            
+            let html = `<h2>סך הכול ${voices.length} קולות</h2>`;
+            
+            html += `<h3>קולות עברית (${heVoices.length}):</h3>`;
+            heVoices.forEach((voice, index) => {
+                html += `
+                    <div class="voice-item">
+                        <strong>${index}: ${voice.name}</strong><br>
+                        שפה: ${voice.lang}<br>
+                        <button onclick="testVoice('${voice.name}', 'שלום! זהו קול מספר ${index}')">בדוק קול</button>
+                    </div>
+                `;
+            });
+            
+            html += `<h3>קולות אנגלית (${enVoices.length}):</h3>`;
+            enVoices.forEach((voice, index) => {
+                html += `
+                    <div class="voice-item">
+                        <strong>${index}: ${voice.name}</strong><br>
+                        שפה: ${voice.lang}<br>
+                        <button onclick="testVoice('${voice.name}', 'Hello! This is voice number ${index}')">בדוק קול</button>
+                    </div>
+                `;
+            });
+            
+            voicesList.innerHTML = html;
+        }
+        
+        function testVoice(voiceName, text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voices = window.speechSynthesis.getVoices();
+            const voice = voices.find(v => v.name === voiceName);
+            
+            if (voice) {
+                utterance.voice = voice;
+                utterance.lang = voice.lang;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // טעון אוטומטי
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+        
+        setTimeout(loadVoices, 100);
+    </script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תצוגת מתכון 🍳</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="warm">
+    <nav class="navbar">
+        <div class="container">
+            <a href="recipes.html" class="navbar-brand">🍳 ספר המתכונים האלגנטי</a>
+            <div class="navbar-menu">
+                <a href="recipes.html">⬅️ חזרה לרשימה</a>
+                <a href="settings.html">⚙️ הגדרות</a>
+                <a href="#" id="logoutBtn">🚪 התנתק</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="recipe-view fade-in">
+            <div class="recipe-header">
+                <h1 id="recipeName"></h1>
+                <span id="recipeCategory" class="recipe-category"></span>
+                <button class="favorite-btn" id="favoriteBtn" style="position: relative; margin: 15px auto; display: block; white-space: nowrap;">
+                    ❤️
+                </button>
+            </div>
+
+            <img id="recipeImage" class="recipe-main-image" alt="תמונת מתכון">
+
+            <!-- מידע על המתכון -->
+            <div class="recipe-info-grid">
+                <div class="info-card">
+                    <div class="icon">⏱️</div>
+                    <div><strong id="prepTime">0</strong> דקות הכנה</div>
+                </div>
+                <div class="info-card">
+                    <div class="icon">🔥</div>
+                    <div><strong id="cookTime">0</strong> דקות בישול</div>
+                </div>
+                <div class="info-card">
+                    <div class="icon">👥</div>
+                    <div><strong id="servings">0</strong> מנות</div>
+                </div>
+                <div class="info-card">
+                    <div class="icon">⚡</div>
+                    <div id="difficulty">בינוני</div>
+                </div>
+            </div>
+
+            <!-- תגיות -->
+            <div id="tagsContainer" class="recipe-tags" style="justify-content: center; margin: 20px 0;"></div>
+
+            <!-- דירוג -->
+            <div class="rating-container">
+                <h3>⭐ דרג את המתכון</h3>
+                <div class="star-rating" id="starRating">
+                    <span class="star" data-rating="1">⭐</span>
+                    <span class="star" data-rating="2">⭐</span>
+                    <span class="star" data-rating="3">⭐</span>
+                    <span class="star" data-rating="4">⭐</span>
+                    <span class="star" data-rating="5">⭐</span>
+                </div>
+                <div id="ratingText" style="margin-top: 10px; font-size: 1.1rem; font-weight: 600;"></div>
+            </div>
+
+            <!-- מרכיבים -->
+            <div class="ingredients-list">
+                <h2>🥘 מרכיבים</h2>
+                <ul id="ingredientsList"></ul>
+            </div>
+            
+            <!-- הוראות הכנה -->
+            <div class="instructions-list">
+                <h2>📝 הוראות הכנה</h2>
+                <ol id="instructionsList"></ol>
+            </div>
+
+            <!-- טיפים -->
+            <div id="tipsContainer" style="display: none;" class="ingredients-list">
+                <h2>💡 טיפים</h2>
+                <p id="tipsText"></p>
+            </div>
+            
+            <!-- כפתורי בקרה -->
+            <div class="controls">
+                <button class="btn btn-success" id="startBtn">▶️ התחל קריאה</button>
+                <button class="btn btn-warning" id="pauseBtn" style="display: none;">⏸️ השהה</button>
+                <button class="btn btn-primary" id="resumeBtn" style="display: none;">▶️ המשך</button>
+                <button class="btn btn-danger" id="stopBtn" style="display: none;">⏹️ עצור</button>
+                <button class="btn btn-secondary" id="printBtn">🖨️ הדפס</button>
+            </div>
+            
+            <div id="statusMessage" style="text-align: center; margin-top: 20px; font-weight: bold; font-size: 1.2rem;"></div>
+
+            <!-- סטטיסטיקות מתכון -->
+            <div class="stats-grid" style="margin-top: 40px;">
+                <div class="stat-card">
+                    <div class="stat-number" id="recipeViews">0</div>
+                    <div>👁️ Views</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="recipeRatings">0</div>
+                    <div>⭐ Ratings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTime">0</div>
+                    <div>⏱️ Total time (min)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data/initial-data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/speech.js"></script>
+    <script>
+        // בדיקת הרשאה
+        Auth.requireAuth();
+        
+        const currentUser = Auth.getCurrentUser();
+        document.body.className = `${currentUser.settings.theme} font-${currentUser.settings.fontSize}`;
+        
+        // יציאה
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
+                // מנקה את המשתמש הנוכחי
+                localStorage.removeItem('currentUser');
+                // חוזר לדף ההתחברות
+                window.location.href = 'index.html';
+            }
+        });
+        
+        // קבלת ID מתכון מה-URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const recipeId = urlParams.get('id');
+        
+        if (!recipeId) {
+            window.location.href = 'recipes.html';
+        }
+        
+        // טעינת המתכון
+        const recipe = Storage.getRecipeById(recipeId);
+        
+        if (!recipe) {
+            alert('המתכון לא נמצא');
+            window.location.href = 'recipes.html';
+        }
+        
+        // עדכון צפיות
+        Storage.incrementViews(recipeId);
+        Storage.updateUserStats(currentUser.id, 'recipesViewed', 1);
+        
+        // הצגת המתכון
+        document.getElementById('recipeName').textContent = recipe.name;
+        document.getElementById('recipeCategory').textContent = recipe.category;
+        document.getElementById('recipeImage').src = recipe.image || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=500';
+        document.getElementById('prepTime').textContent = recipe.prepTime || 0;
+        document.getElementById('cookTime').textContent = recipe.cookTime || 0;
+        document.getElementById('servings').textContent = recipe.servings || 0;
+        document.getElementById('difficulty').textContent = recipe.difficulty || 'בינוני';
+        
+        // תגיות
+        if (recipe.tags && recipe.tags.length > 0) {
+            document.getElementById('tagsContainer').innerHTML = recipe.tags.map(tag => 
+                `<span class="tag">${tag}</span>`
+            ).join('');
+        }
+        
+        // טיפים
+        if (recipe.tips) {
+            document.getElementById('tipsContainer').style.display = 'block';
+            document.getElementById('tipsText').textContent = recipe.tips;
+        }
+        
+        // סטטיסטיקות
+        document.getElementById('recipeViews').textContent = recipe.views || 0;
+        document.getElementById('recipeRatings').textContent = (recipe.ratings || []).length;
+        document.getElementById('totalTime').textContent = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+        
+        // מועדפים
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const updateFavoriteBtn = () => {
+            const isFav = Storage.isFavorite(currentUser.id, recipe.id);
+            favoriteBtn.innerHTML = isFav ? '❤️ Remove from favorites' : '🤍 Add to favorites';
+            favoriteBtn.className = `favorite-btn ${isFav ? 'active' : ''}`;
+        };
+        updateFavoriteBtn();
+        
+        favoriteBtn.addEventListener('click', () => {
+            Storage.toggleFavorite(currentUser.id, recipe.id);
+            updateFavoriteBtn();
+        });
+        
+        // דירוג
+        const userRating = Storage.getUserRating(recipeId, currentUser.id);
+        const updateStars = (rating) => {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                star.className = index < rating ? 'star filled' : 'star empty';
+            });
+        };
+        
+        updateStars(userRating);
+        document.getElementById('ratingText').textContent = recipe.rating ? 
+            `דירוג ממוצע: ${recipe.rating.toFixed(1)} ⭐ (${(recipe.ratings || []).length} דירוגים)` : 
+            'היה הראשון לדרג!';
+        
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = parseInt(star.dataset.rating);
+                Storage.rateRecipe(recipeId, currentUser.id, rating);
+                updateStars(rating);
+                
+                const updatedRecipe = Storage.getRecipeById(recipeId);
+                document.getElementById('ratingText').textContent = 
+                    `דירוג ממוצע: ${updatedRecipe.rating.toFixed(1)} ⭐ (${updatedRecipe.ratings.length} דירוגים)`;
+                document.getElementById('recipeRatings').textContent = updatedRecipe.ratings.length;
+                
+                // הודעה
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success';
+                alert.textContent = `✅ דירגת ${rating} כוכבים!`;
+                alert.style.position = 'fixed';
+                alert.style.top = '20px';
+                alert.style.left = '50%';
+                alert.style.transform = 'translateX(-50%)';
+                alert.style.zIndex = '10000';
+                document.body.appendChild(alert);
+                setTimeout(() => alert.remove(), 2000);
+            });
+            
+            star.addEventListener('mouseenter', () => {
+                const rating = parseInt(star.dataset.rating);
+                updateStars(rating);
+            });
+        });
+        
+        document.getElementById('starRating').addEventListener('mouseleave', () => {
+            const currentRating = Storage.getUserRating(recipeId, currentUser.id);
+            updateStars(currentRating);
+        });
+        
+        // מרכיבים והוראות
+        const ingredientsList = document.getElementById('ingredientsList');
+        ingredientsList.innerHTML = recipe.ingredients.map(ing => `<li>${ing}</li>`).join('');
+        
+        const instructionsList = document.getElementById('instructionsList');
+        instructionsList.innerHTML = recipe.instructions.map((inst, index) => 
+            `<li id="instruction-${index}">${inst}</li>`
+        ).join('');
+        
+        // כפתורי בקרה
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        let isReading = false;
+        
+        // פונקציה לעדכון השורה הנוכחית
+        function updateCurrentLine(index) {
+            document.querySelectorAll('.instructions-list li').forEach(li => {
+                li.classList.remove('active');
+            });
+            
+            if (index >= 0) {
+                const currentLine = document.getElementById(`instruction-${index}`);
+                if (currentLine) {
+                    currentLine.classList.add('active');
+                    currentLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                statusMessage.textContent = `🔊 קורא שלב ${index + 1} מתוך ${recipe.instructions.length}`;
+            } else {
+                statusMessage.textContent = '✅ הקריאה הסתיימה! כל הכבוד!';
+                resetButtons();
+                
+                // עדכון סטטיסטיקות
+                Storage.updateUserStats(currentUser.id, 'recipesCooked', 1);
+                const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+                Storage.updateUserStats(currentUser.id, 'totalCookingTime', totalTime);
+            }
+        }
+        
+        // התחלת הקראה
+        startBtn.addEventListener('click', () => {
+            Speech.init(recipe.instructions, currentUser.settings, updateCurrentLine);
+            Speech.start();
+            
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'inline-block';
+            isReading = true;
+            statusMessage.textContent = '🎙️ מתחיל קריאה...';
+        });
+        
+        // השהיה
+        pauseBtn.addEventListener('click', () => {
+            Speech.pause();
+            pauseBtn.style.display = 'none';
+            resumeBtn.style.display = 'inline-block';
+            statusMessage.textContent = '⏸️ הקריאה הופסקה';
+        });
+        
+        // המשך
+        resumeBtn.addEventListener('click', () => {
+            Speech.resume();
+            resumeBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+            statusMessage.textContent = '▶️ חוזרים לקריאה...';
+        });
+        
+        // עצירה
+        stopBtn.addEventListener('click', () => {
+            Speech.stop();
+            resetButtons();
+            statusMessage.textContent = '⏹️ הקריאה נעצרה';
+        });
+        
+        function resetButtons() {
+            startBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+            resumeBtn.style.display = 'none';
+            stopBtn.style.display = 'none';
+            isReading = false;
+        }
+        
+        // הדפסה
+        document.getElementById('printBtn').addEventListener('click', () => {
+            window.print();
+        });
+        
+        // ניקוי בעת יציאה מהדף
+        window.addEventListener('beforeunload', () => {
+            if (isReading) {
+                Speech.stop();
+            }
+        });
+        
+        // CSS להדפסה
+        const printStyle = document.createElement('style');
+        printStyle.textContent = `
+            @media print {
+                .navbar, .controls, .rating-container, .stats-grid, .favorite-btn { display: none !important; }
+                body { background: white !important; color: black !important; }
+                .card, .ingredients-list, .instructions-list { 
+                    background: white !important; 
+                    box-shadow: none !important;
+                    page-break-inside: avoid;
+                }
+            }
+        `;
+        document.head.appendChild(printStyle);
+    </script>
+</body>
+</html>

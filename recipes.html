@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ספר המתכונים 🍳</title>
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="theme-color" content="#D4A574">
+</head>
+<body class="warm">
+    <nav class="navbar">
+        <div class="container">
+            <a href="recipes.html" class="navbar-brand">🍳 מתכוני חובה!!!</a>
+            <div class="navbar-menu">
+                <span id="userGreeting" style="font-weight: 700;"></span>
+                <a href="settings.html">⚙️ הגדרות</a>
+                <a href="#" id="logoutBtn">🚪 יציאה</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- סטטיסטיקות -->
+        <div class="stats-grid fade-in">
+            <div class="stat-card">
+                <div class="stat-number" id="totalRecipes">0</div>
+                <div>📚 מתכונים</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="favoritesCount">0</div>
+                <div>❤️ מועדפים</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="viewedCount">0</div>
+                <div>👀 נצפו</div>
+            </div>
+        </div>
+
+        <!-- חיפוש וסינון -->
+        <div class="search-filter-container fade-in">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 חיפוש מתכון...">
+            </div>
+        </div>
+
+        <!-- כפתורי סינון -->
+        <div class="filter-buttons fade-in" style="margin-bottom: 20px;">
+            <button class="filter-btn active" data-filter="all">🍽️ הכל</button>
+            <button class="filter-btn" data-filter="favorites">❤️ מועדפים</button>
+            <button class="filter-btn" data-filter="קינוחים">🍰 קינוחים</button>
+            <button class="filter-btn" data-filter="סלטים">🥗 סלטים</button>
+            <button class="filter-btn" data-filter="מנות עיקריות">🍝 מנות עיקריות</button>
+            <button class="filter-btn" data-filter="ארוחת בוקר">🥞 ארוחת בוקר</button>
+            <button class="filter-btn" data-filter="מרקים">🍲 מרקים</button>
+            <button class="filter-btn" data-filter="מנות ראשונות">🥙 מנות ראשונות</button>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button class="btn btn-success pulse" id="addRecipeBtn">➕ הוספת מתכון חדש</button>
+            <button class="btn btn-info" id="updateRecipesBtn" style="margin-right: 10px;">🔄 עדכון ל-34 מתכונים</button>
+        </div>
+
+        <div id="recipesGrid" class="recipes-grid"></div>
+
+        <!-- מודל להוספת מתכון -->
+        <div id="addRecipeModal" style="display: none;" class="modal-overlay">
+            <div class="card modal-content" style="max-width: 700px;">
+                <h2>🆕 מתכון חדש</h2>
+                <form id="addRecipeForm">
+                    <div class="form-group">
+                        <label for="recipeName">📝 שם המתכון</label>
+                        <input type="text" id="recipeName" required placeholder="לדוגמה: עוגת שוקולד">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeCategory">🏷️ קטגוריה</label>
+                        <select id="recipeCategory" required>
+                            <option value="">בחר קטגוריה</option>
+                            <option value="קינוחים">קינוחים</option>
+                            <option value="סלטים">סלטים</option>
+                            <option value="מנות עיקריות">מנות עיקריות</option>
+                            <option value="ארוחת בוקר">ארוחת בוקר</option>
+                            <option value="מנות ראשונות">מנות ראשונות</option>
+                            <option value="מרקים">מרקים</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipeDifficulty">⚡ רמת קושי</label>
+                        <select id="recipeDifficulty" required>
+                            <option value="קל מאוד">קל מאוד</option>
+                            <option value="קל">קל</option>
+                            <option value="בינוני">בינוני</option>
+                            <option value="מאתגר">מאתגר</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label for="prepTime">⏱️ זמן הכנה (דקות)</label>
+                            <input type="number" id="prepTime" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="cookTime">🔥 זמן בישול (דקות)</label>
+                            <input type="number" id="cookTime" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="servings">👥 מנות</label>
+                            <input type="number" id="servings" required min="1">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipeImage">🖼️ תמונת המתכון</label>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3);">
+                                <input type="file" id="recipeImageFile" accept="image/*" style="display: none;">
+                                <span style="font-size: 2rem;">📷</span>
+                                <div>
+                                    <div style="font-weight: 600;">העלה תמונה מהמחשב</div>
+                                    <div style="font-size: 0.85rem; opacity: 0.8;">לחץ כאן לבחירת תמונה</div>
+                                </div>
+                            </label>
+                            <div id="imagePreview" style="margin-top: 10px; display: none;">
+                                <img id="previewImg" style="max-width: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                                <button type="button" id="removeImage" class="btn btn-danger" style="margin-top: 10px; padding: 8px 16px;">❌ הסר תמונה</button>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin: 10px 0; opacity: 0.7;">או</div>
+                        <input type="url" id="recipeImage" placeholder="https://example.com/image.jpg">
+                        <small style="display: block; margin-top: 5px; opacity: 0.8;">
+                            אתה יכול להעלות תמונה או להדביק כתובת
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipeTags">🏷️ תגיות (מופרדות בפסיק)</label>
+                        <input type="text" id="recipeTags" placeholder="קל, מהיר, בריא">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeIngredients">🥘 מרכיבים (אחד בשורה)</label>
+                        <textarea id="recipeIngredients" rows="6" required placeholder="2 כוסות קמח&#10;1 כוס סוכר&#10;3 ביצים"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="recipeInstructions">📋 הוראות (שלב בכל שורה)</label>
+                        <textarea id="recipeInstructions" rows="8" required placeholder="הגדר תנור ל-180°C&#10;של חומרים יבשים"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipeTips">💡 טיפים</label>
+                        <textarea id="recipeTips" rows="2" placeholder="עצה שימושית למתכון..."></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">💾 שמור</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="flex: 1;">❌ ביטול</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="data/initial-data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // בדיקת הרשאה
+        Auth.requireAuth();
+        
+        const currentUser = Auth.getCurrentUser();
+        document.getElementById('userGreeting').textContent = `שלום, ${currentUser.username} 👋`;  
+        
+        // החלת הגדרות משתמש
+        document.body.className = `${currentUser.settings.theme} font-${currentUser.settings.fontSize}`;
+        
+        // יציאה
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('האם אתה בטוח שברצונך לצאת?')) {
+                // מנקה את המשתמש הנוכחי
+                localStorage.removeItem('currentUser');
+                // חוזר לדף ההתחברות
+                window.location.href = 'index.html';
+            }
+        });
+        
+        // טעינת מתכונים
+        let allRecipes = Storage.getRecipes();
+        let currentFilter = 'all';
+        
+        // update button code (restored below)
+        document.getElementById('updateRecipesBtn').addEventListener('click', () => {
+            if (confirm('האם אתה בטוח שברצונך לעדכן ל-34 מתכונים חדשים?')) {
+                localStorage.setItem('recipes', JSON.stringify(INITIAL_DATA.recipes));
+                allRecipes = Storage.getRecipes();
+                updateStats();
+                filterRecipes();
+                
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success';
+                alert.textContent = `✅ עודכן בהצלחה! עכשיו יש ${allRecipes.length} מתכונים!`;
+                alert.style.position = 'fixed';
+                alert.style.top = '20px';
+                alert.style.left = '50%';
+                alert.style.transform = 'translateX(-50%)';
+                alert.style.zIndex = '10000';
+                document.body.appendChild(alert);
+                setTimeout(() => alert.remove(), 3000);
+            }
+        });
+
+        
+        // עדכון סטטיסטיקות
+        function updateStats() {
+            document.getElementById('totalRecipes').textContent = allRecipes.length;
+            document.getElementById('favoritesCount').textContent = Storage.getFavorites(currentUser.id).length;
+            document.getElementById('viewedCount').textContent = currentUser.stats?.recipesViewed || 0;
+        }
+        
+        updateStats();
+        
+        // הצגת מתכונים
+        function displayRecipes(recipes) {
+            const grid = document.getElementById('recipesGrid');
+            
+            if (recipes.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; font-size: 1.2rem;">😔 לא נמצאו מתכונים</p>'; 
+                return;
+            }
+            
+            grid.innerHTML = recipes.map(recipe => {
+                const isFav = Storage.isFavorite(currentUser.id, recipe.id);
+                const stars = '⭐'.repeat(Math.round(recipe.rating || 0));
+                const defaultImage = 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=500';
+                
+                return `
+                    <div class="recipe-card fade-in" data-recipe-id="${recipe.id}">
+                        <button class="favorite-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, ${recipe.id})">
+                            ${isFav ? '❤️' : '🤍'}
+                        </button>
+                        <img src="${recipe.image || defaultImage}" alt="${recipe.name}" class="recipe-image" onerror="this.src='${defaultImage}'">
+                        <div class="recipe-content">
+                            <span class="recipe-category">${recipe.category}</span>
+                            <h3>${recipe.name}</h3>
+                            <div class="recipe-tags">
+                                ${(recipe.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                            <div class="recipe-meta">
+                                <div>
+                                    <div>🥘 ${recipe.ingredients.length} מרכיבים</div>
+                                    <div>📝 ${recipe.instructions.length} שלבים</div>
+                                </div>
+                                <div>
+                                    <div class="rating-stars">${stars}</div>
+                                    <div style="font-size: 0.85rem;">⏱️ ${(recipe.prepTime || 0) + (recipe.cookTime || 0)} דקות</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">
+                                👁️ ${recipe.views || 0} צפיות | 🎯 ${recipe.difficulty || 'בינוני'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // הוספת מאזין לחיצה על כרטיסים
+            document.querySelectorAll('.recipe-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.favorite-btn')) {
+                        const recipeId = card.dataset.recipeId;
+                        viewRecipe(recipeId);
+                    }
+                });
+            });
+        }
+        
+        displayRecipes(allRecipes);
+        
+        // חיפוש
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            filterRecipes();
+        });
+        
+        // סינון
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                filterRecipes();
+            });
+        });
+        
+        function filterRecipes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = allRecipes;
+            
+            // סינון לפי קטגוריה/מועדפים
+            if (currentFilter === 'favorites') {
+                const favorites = Storage.getFavorites(currentUser.id);
+                filtered = filtered.filter(r => favorites.includes(r.id));
+            } else if (currentFilter !== 'all') {
+                filtered = filtered.filter(r => r.category === currentFilter);
+            }
+            
+            // סינון לפי חיפוש
+            if (searchTerm) {
+                filtered = filtered.filter(recipe => 
+                    recipe.name.toLowerCase().includes(searchTerm) ||
+                    recipe.category.toLowerCase().includes(searchTerm) ||
+                    (recipe.tags && recipe.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+                );
+            }
+            
+            displayRecipes(filtered);
+        }
+        
+        // מעבר למתכון
+        function viewRecipe(id) {
+            window.location.href = `recipe-view.html?id=${id}`;
+        }
+        
+        // מועדפים
+        function toggleFavorite(event, recipeId) {
+            event.stopPropagation();
+            Storage.toggleFavorite(currentUser.id, recipeId);
+            updateStats();
+            filterRecipes();
+        }
+        
+        // הוספת מתכון
+        const modal = document.getElementById('addRecipeModal');
+        document.getElementById('addRecipeBtn').addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+        
+        // טיפול בהעלאת תמונה
+        let uploadedImageData = null;
+        
+        document.getElementById('recipeImageFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImageData = event.target.result;
+                    document.getElementById('previewImg').src = uploadedImageData;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        document.getElementById('removeImage').addEventListener('click', () => {
+            uploadedImageData = null;
+            document.getElementById('recipeImageFile').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+        });
+        
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            modal.style.display = 'none';
+            document.getElementById('addRecipeForm').reset();
+            uploadedImageData = null;
+            document.getElementById('imagePreview').style.display = 'none';
+        });
+        
+        document.getElementById('addRecipeModal').addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('addRecipeForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // קביעת התמונה - תמונה מועלאת או קישור או ברירת מחדל
+            let recipeImage = uploadedImageData || 
+                             document.getElementById('recipeImage').value || 
+                             'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=500';
+            
+            const recipe = {
+                name: document.getElementById('recipeName').value,
+                category: document.getElementById('recipeCategory').value,
+                difficulty: document.getElementById('recipeDifficulty').value,
+                prepTime: parseInt(document.getElementById('prepTime').value),
+                cookTime: parseInt(document.getElementById('cookTime').value),
+                servings: parseInt(document.getElementById('servings').value),
+                image: recipeImage,
+                tags: document.getElementById('recipeTags').value.split(',').map(t => t.trim()).filter(t => t),
+                ingredients: document.getElementById('recipeIngredients').value.split('\n').filter(i => i.trim()),
+                instructions: document.getElementById('recipeInstructions').value.split('\n').filter(i => i.trim()),
+                tips: document.getElementById('recipeTips').value,
+                rating: 0,
+                ratings: [],
+                views: 0
+            };
+            
+            Storage.addRecipe(recipe);
+            allRecipes = Storage.getRecipes();
+            updateStats();
+            filterRecipes();
+            
+            modal.style.display = 'none';
+            document.getElementById('addRecipeForm').reset();
+            uploadedImageData = null;
+            document.getElementById('imagePreview').style.display = 'none';
+            
+            // הודעת הצלחה
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success';
+            alert.textContent = '✅ המתכון נוסף בהצלחה!';
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.left = '50%';
+            alert.style.transform = 'translateX(-50%)';
+            alert.style.zIndex = '10000';
+            document.body.appendChild(alert);
+            
+            setTimeout(() => alert.remove(), 3000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "ספר מתכונים מטורף",
+  "short_name": "Recipes 🍳",
+  "description": "אתר מתכונים אינטראקטיבי עם קריאה בקול, דירוגים ומועדפים",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://em-content.zobj.net/thumbs/240/apple/354/cooking_1f373.png",
+      "sizes": "240x240",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "lifestyle", "productivity"],
+  "lang": "he",
+  "dir": "rtl"
+}
