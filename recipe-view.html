@@ -186,7 +186,7 @@
         const favoriteBtn = document.getElementById('favoriteBtn');
         const updateFavoriteBtn = () => {
             const isFav = Storage.isFavorite(currentUser.id, recipe.id);
-            favoriteBtn.innerHTML = isFav ? '❤️ Remove from favorites' : '🤍 Add to favorites';
+            favoriteBtn.innerHTML = isFav ? '❤️  הסר ממועדפים' : '🤍 הוסף למועדפים';
             favoriteBtn.className = `favorite-btn ${isFav ? 'active' : ''}`;
         };
         updateFavoriteBtn();
